@@ -1,15 +1,12 @@
 #include <mainwindow.h>
 #include <globals.h>
 
-
 void MainWindow::testFunc(){
     testmodes testmode = initPatternMultiples;
     // TODO popup to select testmode
-    if(testmode==initPatternMultiples){
-        testInitPatternsMultiples();
-    }
+    if(testmode==initPatternMultiples) testInitPatternsMultiples();
 }
-// test that original pattern doesn't have more multiples than supposed to
+// test that original pattern doesn't have more multiples than it's supposed to
 void MainWindow::testInitPatternsMultiples(){
     // count up to maxMoves fails
     int fails = 0;
@@ -21,12 +18,12 @@ void MainWindow::testInitPatternsMultiples(){
                 numMultiples = numM;
                 numSlots = numS;
                 numColors = numC;
-                if( numColors*numMultiples < numSlots ) // checkNumberSanity
+                if(numColors*numMultiples < numSlots) // checkNumberSanity
                     continue;
                 for(int i=0; i<globals.numTestInits; i++){
                     newGame();
                     if(Game.countMaxOccurence()>numMultiples){
-                        for(int i=0; i<numSlots; i++)failedPatterns[numSlots*fails+i] = Game.originalPattern[i];
+                        memcpy(failedPatterns, Game.originalPattern, numSlots*sizeof(int));
                         fails++;
                     }
                     if(fails >= globals.maxMoves) break;
@@ -38,7 +35,7 @@ void MainWindow::testInitPatternsMultiples(){
     // plot the fails
     if (fails==0) cout("no fails");
     else
-        for(int i=0; i<fails; i++)
+        for(int i=0; i<min(fails, globals.maxNumRows); i++)
             updateAnyColorbar("plate", i, failedPatterns+numSlots*fails);
 }
 

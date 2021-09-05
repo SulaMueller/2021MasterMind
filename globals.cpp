@@ -10,7 +10,6 @@ globals.cpp
 #include<globals.h>
 #include<QDebug>
 
-
 // works only for unsigned elements
 void sort(int* arr, int numels){
     for(int i=0; i<numels; i++){

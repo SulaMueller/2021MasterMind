@@ -25,9 +25,8 @@ void MainWindow::updateAnyColorbar(string type, int row, int* c){
 }
 void MainWindow::updateAllColorbars(){
     for(int row=0; row<Game.currentMovePtr; row++){
-        int showrow = Game.currentMovePtr-1-row;
-        updateAnyColorbar("plate", showrow, Game.allMoves+row*numSlots);
-        updateAnyColorbar("result", showrow, Game.allResults+row*numSlots);
+        updateAnyColorbar("plate", row, Game.allMoves+row*numSlots);
+        updateAnyColorbar("result", row, Game.allResults+row*numSlots);
     }
 }
 void MainWindow::updateMainColorbar(){
@@ -64,35 +63,31 @@ void MainWindow::disableAllSliders(){
     for(int s=0; s<globals.maxNumSlots; s++)
         enableSingleSlider(s+1, false);
 }
-void MainWindow::disableButtons(){
-    ui->button_checkMove->setEnabled(false);
-    ui->button_showPattern->setEnabled(false);
-}
 void MainWindow::enableButtons(){
     ui->button_checkMove->setEnabled(true);
     ui->button_showPattern->setEnabled(true);
 }
-void MainWindow::disableInput(){
-    ui->in_numColors->setDisabled(true);
-    ui->in_numPins->setDisabled(true);
-    ui->in_numMultiples->setDisabled(true);
+void MainWindow::disableButtons(){
+    ui->button_checkMove->setEnabled(false);
+    ui->button_showPattern->setEnabled(false);
 }
 void MainWindow::enableInput(){
     ui->in_numColors->setEnabled(true);
     ui->in_numPins->setEnabled(true);
     ui->in_numMultiples->setEnabled(true);
 }
+void MainWindow::disableInput(){
+    ui->in_numColors->setDisabled(true);
+    ui->in_numPins->setDisabled(true);
+    ui->in_numMultiples->setDisabled(true);
+}
 void MainWindow::clearTextLabel(){
     ui->out_label_result->setVisible(false);
-}
-void MainWindow::addLine(){
-
 }
 void MainWindow::newGame(){
     fetchInput();
     Game = MasterMindGame(numColors, numSlots, numMultiples);
-    for(int i=0; i<globals.maxNumSlots; i++) c_main[i] = globals.c_example[i];
-    //memcpy(c_main, c_example, maxNumSlots*sizeof(int));
+    memcpy(c_main, globals.c_example, globals.maxNumSlots*sizeof(int));
     enableSliders();
     enableButtons();
     enableInput();
@@ -107,69 +102,70 @@ void MainWindow::showPattern(){
     enableInput();
 }
 void MainWindow::checkMove(){
-    //disableInput();
     Game.processMove(c_main);
     updateAllColorbars();
     setCounter();
-    if(!wonGame())
-        lostGame();
+    if(!wonGame()) lostGame();
 }
 void MainWindow::setCounter(){
     ui->out_usedMoves->display(Game.currentMovePtr);
 }
-void MainWindow::setAnyText(QLabel* ql, QString text, QColor background, QColor textcol){
+void MainWindow::setAnyText(QString text, QColor background, QColor textcol, int fontsize){
+    QLabel* ql = ui->out_label_result;
+    QPalette pal = palette();
+    pal.setColor(QPalette::Background, background);
+    pal.setColor(QPalette::Foreground, textcol);
+    ql->setPalette(pal);
+    QFont font = ql->font();
+    font.setPointSize(fontsize);
+    ql->setFont(font);
     ql->setAlignment(Qt::AlignCenter);
     ql->setAutoFillBackground(true);
     ql->setText(text);
     ql->setEnabled(true);
     ql->setVisible(true);
-    QPalette pal = palette();
-    pal.setColor(QPalette::Background, background);
-    pal.setColor(QPalette::Foreground, textcol);
-    ql->setPalette(pal);
 }
-void MainWindow::setWinText(QLabel* ql){
-    setAnyText(ql, "YOU WIN!", Qt::green, Qt::white);
-    ql->setStyleSheet("font-size: 26px");
+void MainWindow::setWinText(){
+    setAnyText("YOU WIN!", Qt::green, Qt::white, 26);
 }
-void MainWindow::setLoseText(QLabel* ql){
-    setAnyText(ql, "Out of moves. You loose :(", Qt::red, Qt::white);
-    ql->setStyleSheet("font-size: 14px");
+void MainWindow::setLoseText(){
+    setAnyText("Out of moves.\n You loose :(", Qt::red, Qt::white, 14);
 }
-void MainWindow::setWarnText(QLabel* ql, QString text){
-    setAnyText(ql, text, Qt::white, Qt::red);
-    ql->setStyleSheet("font-size: 12px");
+void MainWindow::setWarnText(QString text){
+    setAnyText(text, Qt::white, Qt::red, 12);
 }
 bool MainWindow::wonGame(){
     if(Game.isDone){
         showPattern();
-        setWinText(ui->out_label_result);
+        setWinText();
     }
     return Game.isDone;
 }
 void MainWindow::lostGame(){
     if(Game.currentMovePtr == globals.maxNumRows){
         showPattern();
-        setLoseText(ui->out_label_result);
+        setLoseText();
     }
 }
 bool MainWindow::checkNumberSanity(){
     fetchInput();
-    return  numColors*numMultiples >= numSlots;
+    return numColors*numMultiples >= numSlots;
 }
 void MainWindow::numPinsChanged(){
     if(!checkNumberSanity()){
-        //setWarnText(ui->out_label_result, "Need as least as many colors as slots.\nIncreased number of colors.");
+        setWarnText("Need as least as many colors as slots.\nIncreased number of colors.");
         ui->in_numColors->setValue((numSlots-1)/numMultiples+1);
     }
 }
 void MainWindow::numColorsChanged(){
     if(!checkNumberSanity()){
+        setWarnText("Need as least as many colors as slots.\nIncreased number of multiples.");
         ui->in_numMultiples->setValue((numSlots-1)/numColors+1);
     }
 }
 void MainWindow::numMultiplesChanged(){
     if(!checkNumberSanity()){
         ui->in_numColors->setValue((numSlots-1)/numMultiples+1);
+        setWarnText("Need as least as many colors as slots.\nIncreased number of colors.");
     }
 }
